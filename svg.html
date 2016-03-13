@@ -1,0 +1,99 @@
+<html>
+
+<head>
+    <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+    <svg class="canvas" height="400"></svg>
+    <script type="text/javascript">
+        var NUMBER_OF_GRAPHS = 8,
+            NUMBER_OF_VALUES_PER_GRAPH = 20,
+            GRAPH_MAX_VAL = 10,
+            HEIGHT = 40;
+            CANVAS_WIDTH = 800;
+        var data = d3.range(0, NUMBER_OF_GRAPHS);
+        var hist = d3.layout.histogram().bins(d3.range(0, GRAPH_MAX_VAL));
+        var y_bars_list = [];
+        data = data.map(function(v) {
+            var hist_data = hist(d3.range(0, NUMBER_OF_VALUES_PER_GRAPH).map(
+                function(v) {
+                    return Math.round(Math.random() * GRAPH_MAX_VAL)
+                }
+            ));
+            y_bars_list.push(
+                d3.scale.linear()
+                    .domain([0,d3.max(hist_data,function(d){return d.y})])
+                    .range([0, HEIGHT]));
+            return hist_data
+            ;
+        });
+        var data_values = data.map(function(v) {
+                    return Math.round(Math.random() * GRAPH_MAX_VAL);
+                });
+        
+        var x_graphs = d3.scale.linear().domain([0, data.length]).range([0, CANVAS_WIDTH]),
+            x_bars = d3.scale.linear().domain([0, GRAPH_MAX_VAL]).range([0, 80]);
+        
+        var svg = d3.select("svg.canvas"),
+            mark_g = svg.append("g").attr("class","mark"),
+            hist_g = svg.append("g").attr("class","hist"),
+            value_g = svg.append("g").attr("class","text");
+            label_g = svg.append("g").attr("class","label");
+        
+        svg.attr("width",CANVAS_WIDTH);
+        
+        mark_g.selectAll("g").data(data_values).enter().append("g")
+            .attr("transform",function(d,i){return "translate("+String(x_graphs(i))+",90)scale(1,-1)"})
+            .append("rect")
+            .attr("class",".data_val")
+            .attr("x",function(d,i){return String(x_bars(d))})
+            .attr("y","20")
+            .attr("height","50")
+            .attr("width","8")
+            .attr("fill","orange");
+            
+        var g = hist_g.selectAll("g").data(data, function(d,i){
+            d.y_scale = y_bars_list[i];
+            return d
+        }).enter().append("g")
+            .attr("transform",function(d,i){return "translate("+String(x_graphs(i))+",90)scale(1,-1)"})
+            .attr("fill","lightblue");
+            
+        var rect = g.selectAll("rect").data(function(d) { return d; }).enter()
+            .append("rect")
+            .attr("x",function(d,i){return String(x_bars(d.x))})
+            .attr("y","20")
+            .attr("height",function(d,i){
+                return d3.select(this.parentNode).datum().y_scale(d.y);
+            })
+            .attr("width","8")
+            .style("opacity",".8");
+        
+        var text = value_g.selectAll("g").data(data_values).enter().append("g")
+            .attr("fill","black")
+            .attr("transform",function(d,i){return "translate("+String(x_graphs(i))+",90)"})
+            .append("text")
+            .attr("x","35")
+            .attr("y","0")
+            .attr("text-anchor", "middle")
+            .text(function(d,i){
+                return String(d3.select(this.parentNode).datum());
+            });
+
+        
+        var text = label_g.selectAll("g").data(data_values).enter().append("g")
+            .attr("fill","black")
+            .attr("transform",function(d,i){return "translate("+String(x_graphs(i))+",15)"})
+            .append("text")
+            .attr("x","35")
+            .attr("y","0")
+            .attr("text-anchor", "middle")
+            .text(function(d,i){
+                return "Metric "+String(i+1);
+            });
+
+    </script>
+</body>
+
+</html>
